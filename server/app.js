@@ -5,6 +5,7 @@ const partials = require('express-partials');
 const bodyParser = require('body-parser');
 const Auth = require('./middleware/auth');
 const models = require('./models');
+const hashUtils = require('./lib/hashUtils.js');
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.get('/links',
 app.post('/links', 
 (req, res, next) => {
   var url = req.body.url;
+
   if (!models.Links.isValidUrl(url)) {
     // send back a 404 if link is not valid
     return res.sendStatus(404);
@@ -76,10 +78,44 @@ app.post('/links',
     });
 });
 
+app.post('/signup', 
+  (req, res, next) => {
+    var body = req.body;
+    var hashedPassword = hashUtils.hashFunction(body.password);
+
+    models.User.create({
+      username: body.username,
+      password: hashedPassword
+    }).then(() => {
+      res.redirect(302, '/');
+    })
+    .error((err) => {
+      res.redirect(404, '/signup');
+    });
+  });
+
+app.post('/login', 
+  (req, res, next) => {
+    var body = req.body;
+    var hashedPassword = hashUtils.hashFunction(body.password);
+     
+    models.User.get({
+      username: body.username,
+      password: hashedPassword
+    })
+  .then((data) => {
+    if (data) {
+      res.redirect(302, '/');
+    } else {
+      res.redirect(404, '/login');
+    }
+  });
+  });
+
+
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
-
 
 
 /************************************************************/
