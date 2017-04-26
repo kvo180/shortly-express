@@ -5,7 +5,10 @@ const partials = require('express-partials');
 const bodyParser = require('body-parser');
 const Auth = require('./middleware/auth');
 const models = require('./models');
-const hashUtils = require('./lib/hashUtils.js');
+
+//
+const cookieParser = require('./middleware/cookieParser');
+
 
 const app = express();
 
@@ -18,6 +21,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 // Serve static files from ../public directory
 app.use(express.static(path.join(__dirname, '../public')));
+
 
 
 app.get('/', 
@@ -81,7 +85,7 @@ app.post('/links',
 app.post('/signup', 
   (req, res, next) => {
     var body = req.body;
-    var hashedPassword = hashUtils.hashFunction(body.password);
+    var hashedPassword = utils.hashFunction(body.password);
 
     models.User.create({
       username: body.username,
@@ -97,14 +101,14 @@ app.post('/signup',
 app.post('/login', 
   (req, res, next) => {
     var body = req.body;
-    var hashedPassword = hashUtils.hashFunction(body.password);
+    var hashedPassword = utils.hashFunction(body.password);
      
     models.User.get({
       username: body.username,
       password: hashedPassword
     })
-  .then((data) => {
-    if (data) {
+  .then((user) => {
+    if (user) {
       res.redirect(302, '/');
     } else {
       res.redirect(404, '/login');
